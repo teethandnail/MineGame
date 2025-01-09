@@ -1,0 +1,144 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+#new-game-btn {
+    padding: 5px 15px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#new-game-btn:hover {
+    background-color: #45a049;
+}
+
+.difficulty-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.difficulty-btn {
+    padding: 5px 15px;
+    font-size: 16px;
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.difficulty-btn:hover {
+    background-color: #d0d0d0;
+}
+
+.difficulty-btn.active {
+    background-color: #2196F3;
+    color: white;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 9), 40px);
+    grid-template-rows: repeat(var(--rows, 9), 40px);
+    gap: 0.5px;
+    background-color: #005FB8;
+    border: 1px solid #005FB8;
+    border-radius: 4px;
+    padding: 1px;
+}
+
+.cell {
+    width: 40px;
+    height: 40px;
+    background-color: #0078D7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    font-size: 18px;
+    border: 0.5px solid #005FB8;
+    transition: background-color 0.2s;
+    color: white;
+}
+
+.cell:hover {
+    background-color: #429CE3;
+}
+
+.cell.revealed {
+    background-color: #fff;
+    border: 0.5px solid #ddd;
+    color: inherit;
+}
+
+.cell.mine {
+    background-color: #fff;
+    animation: explode 0.5s ease-out;
+}
+
+.cell.mine.triggered {
+    background-color: #ff0000;
+}
+
+.cell.flagged {
+    background-color: #0078D7;
+}
+
+/* 数字颜色 */
+.cell[data-number="1"] { color: #2196F3; }  /* 蓝色 */
+.cell[data-number="2"] { color: #4CAF50; }  /* 绿色 */
+.cell[data-number="3"] { color: #f44336; }  /* 红色 */
+.cell[data-number="4"] { color: #673AB7; }  /* 深紫色 */
+.cell[data-number="5"] { color: #795548; }  /* 棕色 */
+.cell[data-number="6"] { color: #009688; }  /* 青色 */
+.cell[data-number="7"] { color: #000000; }  /* 黑色 */
+.cell[data-number="8"] { color: #607D8B; }  /* 蓝灰色 */
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+} 

@@ -4,383 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>扫雷游戏</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        window.difyChatbotConfig = {
+            token: 'uujMCUJyXoSc8x4i',
+            baseUrl: 'http://localhost:8080'
+        }
+    </script>
+    <script
+        src="http://localhost:8080/embed.min.js"
+        id="uujMCUJyXoSc8x4i"
+        defer>
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
+        #dify-chatbot-bubble-button {
+            background-color: #1C64F2 !important;
         }
-        #content {
-            text-align: center;
-        }
-        #game-container {
-            display: inline-block;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        #game {
-            display: grid;
-            grid-template-columns: repeat(var(--size), 30px);
-            grid-gap: 1px;
-            margin-top: 20px;
-        }
-        .cell {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            cursor: pointer;
-            background-color: #4169E1;
-            user-select: none;
-        }
-        .revealed {
-            background-color: #f0f0f0;
-        }
-        .mine {
-            background-color: #ffff00;
-        }
-        .flagged {
-            background-color: #ffff00;
-        }
-        #modal {
-            display: none;
-            position: absolute;
-            z-index: 1;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            text-align: center;
-            width: 200px;
-        }
-        #modal.win {
-            background-color: #FFD700;
-            border: 2px solid #FFA500;
-            animation: celebrate 0.5s ease-in-out infinite alternate;
-        }
-        #modal.lose {
-            background-color: #E0E0E0; /* 淡灰色背景 */
-            border: 2px solid #BDBDBD; /* 深灰色边框 */
-            color: #424242; /* 深灰色文字 */
-        }
-        @keyframes celebrate {
-            from {
-                transform: translate(-50%, -50%) scale(1);
-            }
-            to {
-                transform: translate(-50%, -50%) scale(1.03);
-            }
-        }
-        #modal-message {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        button {
-            margin: 5px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        #modal.win button {
-            background-color: #32CD32;
-            color: white;
-        }
-        #modal.win button:hover {
-            background-color: #228B22;
-        }
-        #modal.lose button {
-            background-color: #9E9E9E; /* 中灰色按钮 */
-            color: white;
-        }
-        #modal.lose button:hover {
-            background-color: #757575; /* 深灰色按钮悬停效果 */
-        }
-        #difficulty-select {
-            margin-bottom: 10px;
-        }
-        #difficulty-dropdown {
-            padding: 5px 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: white;
-            cursor: pointer;
-        }
-        #difficulty-dropdown option {
-            padding: 5px;
+        #dify-chatbot-bubble-window {
+            width: 24rem !important;
+            height: 40rem !important;
         }
     </style>
 </head>
 <body>
-    <div id="content">
-        <h1>扫雷游戏</h1>
-        <div id="difficulty-select">
-            难度: 
-            <select id="difficulty-dropdown">
-                <option value="easy">简单</option>
-                <option value="medium">中等</option>
-                <option value="hard">困难</option>
-            </select>
+    <div class="container">
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn active" data-difficulty="easy">简单</button>
+            <button class="difficulty-btn" data-difficulty="medium">中等</button>
+            <button class="difficulty-btn" data-difficulty="hard">困难</button>
         </div>
-        <div id="timer">时间: 0.0秒</div>
-        <div id="game-container">
-            <div id="game"></div>
-            <div id="modal">
-                <div id="modal-message"></div>
-                <button onclick="startNewGame()">再来一局</button>
-            </div>
+        <div class="game-info">
+            <div class="mines-count">剩余地雷: <span id="mines-count">10</span></div>
+            <button id="new-game-btn">新游戏</button>
+            <div class="timer">时间: <span id="timer">0</span></div>
         </div>
+        <div id="game-board"></div>
     </div>
-
-    <script>
-        let board;
-        let size;
-        let mines;
-        let revealed;
-        let flagged;
-        let gameOver;
-        let startTime;
-        let timerInterval;
-        let isFirstClick = true;
-
-        const difficulties = {
-            easy: { size: 9, mines: 10 },
-            medium: { size: 16, mines: 40 },
-            hard: { size: 24, mines: 99 }
-        };
-
-        document.getElementById('difficulty-dropdown').addEventListener('change', function() {
-            const level = this.value;
-            size = difficulties[level].size;
-            mines = difficulties[level].mines;
-            startNewGame();
-        });
-
-        function startNewGame() {
-            board = [];
-            revealed = new Set();
-            flagged = new Set();
-            gameOver = false;
-            isFirstClick = true;
-            document.getElementById('modal').style.display = 'none';
-            document.getElementById('modal').className = '';
-            clearInterval(timerInterval);
-            document.getElementById('timer').textContent = '时间: 0.0秒';
-            createBoard();
-            renderBoard();
-        }
-
-        function createBoard() {
-            for (let i = 0; i < size; i++) {
-                board[i] = [];
-                for (let j = 0; j < size; j++) {
-                    board[i][j] = 0;
-                }
-            }
-        }
-
-        function placeMines(safeX, safeY) {
-            let minesPlaced = 0;
-            while (minesPlaced < mines) {
-                const x = Math.floor(Math.random() * size);
-                const y = Math.floor(Math.random() * size);
-                if (board[x][y] !== 'mine' && (x !== safeX || y !== safeY)) {
-                    board[x][y] = 'mine';
-                    minesPlaced++;
-                }
-            }
-
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    if (board[i][j] !== 'mine') {
-                        board[i][j] = countAdjacentMines(i, j);
-                    }
-                }
-            }
-        }
-
-        function countAdjacentMines(x, y) {
-            let count = 0;
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    if (i === 0 && j === 0) continue;
-                    const newX = x + i;
-                    const newY = y + j;
-                    if (newX >= 0 && newX < size && newY >= 0 && newY < size && board[newX][newY] === 'mine') {
-                        count++;
-                    }
-                }
-            }
-            return count;
-        }
-
-        function renderBoard() {
-            const gameContainer = document.getElementById('game');
-            gameContainer.innerHTML = '';
-            gameContainer.style.setProperty('--size', size);
-
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.dataset.x = i;
-                    cell.dataset.y = j;
-                    cell.addEventListener('click', () => revealCell(i, j));
-                    cell.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        flagCell(i, j);
-                    });
-                    cell.addEventListener('dblclick', () => quickReveal(i, j));
-                    gameContainer.appendChild(cell);
-                }
-            }
-        }
-
-        function revealCell(x, y) {
-            if (gameOver || revealed.has(`${x},${y}`) || flagged.has(`${x},${y}`)) return;
-
-            if (isFirstClick) {
-                placeMines(x, y);
-                startTimer();
-                isFirstClick = false;
-            }
-
-            revealed.add(`${x},${y}`);
-            const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-            cell.classList.add('revealed');
-
-            if (board[x][y] === 'mine') {
-                cell.classList.add('mine');
-                cell.textContent = '💣';
-                endGame(false);
-            } else {
-                cell.textContent = board[x][y] || '';
-                if (board[x][y] === 0) {
-                    revealAdjacentCells(x, y);
-                }
-            }
-
-            if (revealed.size === size * size - mines) {
-                endGame(true);
-            }
-        }
-
-        function flagCell(x, y) {
-            if (gameOver || revealed.has(`${x},${y}`)) return;
-
-            const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-            if (flagged.has(`${x},${y}`)) {
-                flagged.delete(`${x},${y}`);
-                cell.classList.remove('flagged');
-                cell.textContent = '';
-            } else {
-                flagged.add(`${x},${y}`);
-                cell.classList.add('flagged');
-                cell.textContent = '🚩';
-            }
-        }
-
-        function revealAdjacentCells(x, y) {
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    if (i === 0 && j === 0) continue;
-                    const newX = x + i;
-                    const newY = y + j;
-                    if (newX >= 0 && newX < size && newY >= 0 && newY < size && !revealed.has(`${newX},${newY}`)) {
-                        revealCell(newX, newY);
-                    }
-                }
-            }
-        }
-
-        function quickReveal(x, y) {
-            if (gameOver || !revealed.has(`${x},${y}`)) return;
-
-            const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-            const cellValue = parseInt(cell.textContent);
-            if (isNaN(cellValue)) return;
-
-            let flagCount = 0;
-            const adjacentCells = [];
-
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    if (i === 0 && j === 0) continue;
-                    const newX = x + i;
-                    const newY = y + j;
-                    if (newX >= 0 && newX < size && newY >= 0 && newY < size) {
-                        if (flagged.has(`${newX},${newY}`)) {
-                            flagCount++;
-                        } else if (!revealed.has(`${newX},${newY}`)) {
-                            adjacentCells.push([newX, newY]);
-                        }
-                    }
-                }
-            }
-
-            if (flagCount === cellValue) {
-                for (const [newX, newY] of adjacentCells) {
-                    revealCell(newX, newY);
-                }
-            }
-        }
-
-        function endGame(isWin) {
-            gameOver = true;
-            clearInterval(timerInterval);
-            const modal = document.getElementById('modal');
-            const message = document.getElementById('modal-message');
-            
-            if (isWin) {
-                modal.classList.add('win');
-                message.textContent = '恭喜你赢了！🎉';
-            } else {
-                modal.classList.add('lose');
-                message.textContent = '游戏结束！💣';
-            }
-            
-            modal.style.display = 'block';
-
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    if (board[i][j] === 'mine') {
-                        const cell = document.querySelector(`[data-x="${i}"][data-y="${j}"]`);
-                        cell.classList.add('revealed', 'mine');
-                        cell.textContent = '💣';
-                    }
-                }
-            }
-        }
-
-        function startTimer() {
-            startTime = Date.now();
-            timerInterval = setInterval(updateTimer, 100);
-        }
-
-        function updateTimer() {
-            const elapsedTime = (Date.now() - startTime) / 1000;
-            document.getElementById('timer').textContent = `时间: ${elapsedTime.toFixed(1)}秒`;
-        }
-
-        // 初始化游戏
-        size = difficulties.easy.size;
-        mines = difficulties.easy.mines;
-        startNewGame();
-    </script>
+    <audio id="gameOverSound" src="game_failed.mp3"></audio>
+    <script src="script.js"></script>
 </body>
-</html>
+</html> 
